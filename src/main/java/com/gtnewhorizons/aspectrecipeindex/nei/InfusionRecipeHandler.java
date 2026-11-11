@@ -153,8 +153,30 @@ public class InfusionRecipeHandler extends TemplateThaumHandler {
 
     @Override
     public void drawExtras(int recipeIndex) {
+        refreshRandomizedAspectStacks(recipeIndex);
         super.drawExtras(recipeIndex);
         drawInstability(recipeIndex);
+    }
+
+    /**
+     * Aspect lists implementing {@link IAspectRangeList} re-roll their contents on getter access, at most once every
+     * 500ms. Called every frame: keeps the displayed stack sizes ticking while the recipe is on screen instead of only
+     * being rolled when the view is opened. Plain {@code AspectList}s are unaffected.
+     */
+    private void refreshRandomizedAspectStacks(int recipeIndex) {
+        if (recipeIndex >= this.aspects.size()) {
+            return;
+        }
+        final AspectList recipeAspects = this.aspects.get(recipeIndex);
+        if (!(recipeAspects instanceof IAspectRangeList)) {
+            return;
+        }
+        recipeAspects.getAspectsSortedAmount(); // realize the current roll
+        for (PositionedStack stack : ((InfusionCachedRecipe) this.arecipes.get(recipeIndex)).getIngredients()) {
+            if (stack.item.getItem() instanceof ItemAspect) {
+                stack.item.stackSize = recipeAspects.getAmount(ItemAspect.getAspect(stack.item));
+            }
+        }
     }
 
     public void drawInstability(int recipeIndex) {
