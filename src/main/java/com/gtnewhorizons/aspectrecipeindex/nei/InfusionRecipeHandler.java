@@ -174,7 +174,15 @@ public class InfusionRecipeHandler extends TemplateThaumHandler {
         recipeAspects.getAspectsSortedAmount(); // realize the current roll
         for (PositionedStack stack : ((InfusionCachedRecipe) this.arecipes.get(recipeIndex)).getIngredients()) {
             if (stack.item.getItem() instanceof ItemAspect) {
-                stack.item.stackSize = recipeAspects.getAmount(ItemAspect.getAspect(stack.item));
+                final int amount = recipeAspects.getAmount(ItemAspect.getAspect(stack.item));
+                stack.item.stackSize = amount;
+                // NEI's permutation cycling periodically replaces .item with a copy of items[]; keep every
+                // reference in sync or the stale cache-time amount flashes for a frame on cycle ticks
+                if (stack.items != null) {
+                    for (ItemStack is : stack.items) {
+                        is.stackSize = amount;
+                    }
+                }
             }
         }
     }
