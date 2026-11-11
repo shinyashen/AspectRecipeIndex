@@ -367,17 +367,21 @@ public class InfusionRecipeHandler extends TemplateThaumHandler {
         }
 
         protected void addAspectsToIngredients() {
-            int rows = (int) Math.ceil((double) aspects.size() / aspectsPerRow);
+            // Realize AspectLists that populate lazily before reading them: Gadomancy's
+            // RandomizedAspectList stays empty until a getter triggers a re-roll, so its recipes
+            // showed no aspects here. For plain AspectLists this call changes nothing.
+            final Aspect[] sortedAspects = aspects.getAspectsSortedAmount();
+            int rows = (int) Math.ceil((double) sortedAspects.length / aspectsPerRow);
             final int baseX = 35;
             final int baseY = 130 + itemOffset();
             int count = 0;
             for (int row = 0; row < rows; row++) {
                 int reversedRow = -row + rows - 1;
                 // distribute evenly
-                int columns = (aspects.size() + reversedRow) / rows;
+                int columns = (sortedAspects.length + reversedRow) / rows;
                 int xOffset = (100 - columns * 20) / 2;
                 for (int column = 0; column < columns; column++) {
-                    Aspect aspect = aspects.getAspectsSortedAmount()[count++];
+                    Aspect aspect = sortedAspects[count++];
                     int posX = baseX + column * 20 + xOffset;
                     int posY = baseY + row * 20;
                     ItemStack stack = new ItemStack(ModItems.itemAspect, aspects.getAmount(aspect), 1);
